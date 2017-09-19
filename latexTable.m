@@ -95,6 +95,9 @@ function latex = latexTable(input)
 % % LaTex table label:
 % input.tableLabel = 'MyTableLabel';
 %
+% % table (floating) environment:
+% input.tableEnvironment = 1;
+%
 % % Switch to generate a complete LaTex document or just a table:
 % input.makeCompleteLatexDocument = 1;
 %
@@ -125,6 +128,9 @@ if ~isfield(input,'tableColumnAlignment'),input.tableColumnAlignment = 'c';end
 % Specify whether the table has borders:
 % 0 for no borders, 1 for borders
 if ~isfield(input,'tableBorders'),input.tableBorders = 1;end
+% Specify whether a table environment should be used:
+% 0 for no table env., 1 for table env.
+if ~isfield(input,'tableEnvironment'),input.tableEnvironment = 1;end
 % Specify whether to use booktabs formatting or regular table formatting:
 if ~isfield(input,'booktabs')
     input.booktabs = 0;
@@ -204,7 +210,13 @@ if input.tableBorders
 else
     header = ['\begin{tabular}','{',repmat(input.tableColumnAlignment,1,size(C,2)),'}'];
 end
-latex = {['\begin{table}',input.tablePlacement];'\centering';header};
+
+% add (floating) table environment or just centered tabular
+if input.tableEnvironment
+    latex = {['\begin{table}',input.tablePlacement];'\centering';header};
+else
+    latex = {'\begin{center}';header};
+end
 
 % generate table
 if input.booktabs
@@ -241,14 +253,19 @@ if input.booktabs
     latex(end+1) = {'\bottomrule'};
 end   
 
+% close table environment if opened
+if input.tableEnvironment
+    tableFooter = {'\end{tabular}';['\caption{',input.tableCaption,'}']; ...
+        ['\label{table:',input.tableLabel,'}'];'\end{table}'};
+else
+    tableFooter = {'\end{tabular}';'\end{center}'};
+end
 
 % make footer lines for table:
-tableFooter = {'\end{tabular}';['\caption{',input.tableCaption,'}']; ...
-    ['\label{table:',input.tableLabel,'}'];'\end{table}'};
 if input.tableBorders
     latex = [latex;{hLine};tableFooter];
 else
-    latex = [latex;tableFooter];
+    latex = [latex; tableFooter];
 end
 
 % add code if a complete latex document should be created:
